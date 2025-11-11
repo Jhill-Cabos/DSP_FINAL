@@ -10,8 +10,8 @@ from io import BytesIO
 from PIL import Image
 
 # Streamlit config
-st.set_page_config(page_title="Gum Image Augmentation", layout="wide")
-st.title("🦷 Gum Image Augmentation App")
+st.set_page_config(page_title="Digital Image Processing for Gum Segmentation and Dataset Augmentation", layout="wide")
+st.title("Digital Image Processing for Gum Segmentation and Dataset Augmentation")
 st.write("Upload or capture intraoral images to segment gum regions and generate augmented versions.")
 
 # --- Sidebar ---
