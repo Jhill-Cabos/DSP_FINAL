@@ -122,3 +122,4 @@ if st.button("🚀 Start Augmentation"):
         process_and_augment(img, "captured_image.png")
     else:
         st.warning("⚠️ Please upload an image or take a photo first.")
+
