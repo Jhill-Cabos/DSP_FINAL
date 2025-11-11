@@ -63,7 +63,7 @@ def process_and_augment(img, file_name, output_dir):
         st.image(cv2.cvtColor(gum_only, cv2.COLOR_BGR2RGB), caption="Segmented Gum Region")
 
     # Step 4: Augmentations
-    st.write(f"Generating {num_aug} augmentations for **{file_name}**...")
+    st.write(f"Generating augmentations for **{file_name}**...")
     for i in range(num_aug):
         aug = gum_only.copy()
         aug_type = random.choice(augment_types)
