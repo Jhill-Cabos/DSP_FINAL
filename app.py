@@ -69,7 +69,7 @@ def process_and_augment(img, file_name, output_dir):
                         [0, 0, 0]])  
 
     kernel3 = np.array([[-1, -1, -1],
-                        [-1, -1, -1],
+                        [-1, 8, -1],
                         [-1, -1, -1]])  
 
     kernel1_image = convolve2d(gray, kernel1, mode='same', boundary='symm')
