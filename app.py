@@ -8,6 +8,7 @@ import tempfile
 import zipfile
 from io import BytesIO
 from PIL import Image
+from scipy.signal import convolve2d
 
 # Streamlit config
 st.set_page_config(page_title="Digital Image Processing for Gum Segmentation and Dataset Augmentation", layout="wide")
@@ -38,6 +39,7 @@ elif input_mode == "Use Camera":
     captured_image = st.camera_input("Take a photo with your webcam")
 
 # --- Processing + Augmentation ---
+
 def process_and_augment(img, file_name, output_dir):
     # Step 1: Segment gum region (HSV red range)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -55,14 +57,53 @@ def process_and_augment(img, file_name, output_dir):
     # Step 3: Apply mask to keep only gums
     gum_only = cv2.bitwise_and(img, img, mask=mask)
 
-    # Display preview
+    # --- Step 3.1: Apply 3×3 custom kernels ---
+    gray = cv2.cvtColor(gum_only, cv2.COLOR_BGR2GRAY)
+
+    kernel1 = np.array([[1, 0, 1],
+                        [0, -1, 0],
+                        [1, 0, 1]]) 
+
+    kernel2 = np.array([[0, 0, 0],
+                        [0, 200, 0],
+                        [0, 0, 0]])  
+
+    kernel3 = np.array([[-1, -1, -1],
+                        [-1, -1, -1],
+                        [-1, -1, -1]])  
+
+    kernel1_image = convolve2d(gray, kernel1, mode='same', boundary='symm')
+    kernel2_image = convolve2d(gray, kernel2, mode='same', boundary='symm')
+    kernel3_image = convolve2d(gray, kernel3, mode='same', boundary='symm')
+
+    # Normalize results to 0–255 for display
+    def normalize(img_arr):
+        img_arr = np.clip(img_arr, 0, 255)
+        return img_arr.astype(np.uint8)
+
+    kernel1_image = normalize(kernel1_image)
+    kernel2_image = normalize(kernel2_image)
+    kernel3_image = normalize(kernel3_image)
+
+    # Display previews (3×3 kernels)
+    st.subheader("🧠 Kernel Convolution Results (3×3)")
+    colA, colB, colC = st.columns(3)
+    with colA:
+        st.image(kernel1_image, caption="Kernel 1 Result", use_container_width=True)
+    with colB:
+        st.image(kernel2_image, caption="Kernel 2 Result", use_container_width=True)
+    with colC:
+        st.image(kernel3_image, caption="Kernel 3 Result", use_container_width=True)
+
+    # Display main segmentation comparison
+    st.subheader("🦷 Gum Segmentation Preview")
     col1, col2 = st.columns(2)
     with col1:
         st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="Original Image")
     with col2:
         st.image(cv2.cvtColor(gum_only, cv2.COLOR_BGR2RGB), caption="Segmented Gum Region")
 
-    # Step 4: Augmentations
+    # Continue with augmentations
     st.write(f"Generating augmentations for **{file_name}**...")
     for i in range(num_aug):
         aug = gum_only.copy()
@@ -93,12 +134,10 @@ def process_and_augment(img, file_name, output_dir):
             k = random.choice(blur_values)
             aug = cv2.GaussianBlur(aug, (k, k), 0)
 
-        # Save augmented image
         save_name = f"{os.path.splitext(file_name)[0]}_aug_{i+1:03d}_{aug_type}.png"
         save_path = os.path.join(output_dir, save_name)
         cv2.imwrite(save_path, aug)
 
-        # Display sample previews
         if i < 3:
             st.image(cv2.cvtColor(aug, cv2.COLOR_BGR2RGB), caption=f"Aug #{i+1}: {aug_type}")
 
